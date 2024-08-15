@@ -1,17 +1,16 @@
 package com.haribo.community_service.post.application.service;
 
 import com.haribo.community_service.comment.application.dto.Comment;
-import com.haribo.community_service.common.amazonS3.S3ServiceImpl;
-import com.haribo.community_service.post.application.dto.Post;
-
 import com.haribo.community_service.comment.domain.repository.CommentRepository;
-import com.haribo.community_service.post.domain.repository.PostRepository;
+import com.haribo.community_service.comment.presentation.response.CommentResponse;
+import com.haribo.community_service.common.amazonS3.S3ServiceImpl;
 import com.haribo.community_service.common.exception.CustomErrorCode;
 import com.haribo.community_service.common.exception.CustomException;
+import com.haribo.community_service.post.application.dto.Post;
+import com.haribo.community_service.post.domain.repository.PostRepository;
 import com.haribo.community_service.post.presentation.request.PostRequestForCreate;
 import com.haribo.community_service.post.presentation.request.PostRequestForUpdate;
 import com.haribo.community_service.post.presentation.response.AllPostResponse;
-import com.haribo.community_service.comment.presentation.response.CommentResponse;
 import com.haribo.community_service.post.presentation.response.PostMainResponse;
 import com.haribo.community_service.post.presentation.response.PostResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,18 +37,9 @@ public class PostServiceImpl implements PostService {
         List<Post> postList = postRepository.findTop5ByOrderBycreatedDatetDesc()
                 .orElseThrow(()->new CustomException(CustomErrorCode.POST_NOT_FOUND));
 
-        List<PostMainResponse> postMainResponseList = new ArrayList<>();
-
-        for (Post post : postList){
-            postMainResponseList.add(PostMainResponse.builder()
-                            .postId(post.getPostId())
-                            .postAuthorId(post.getPostAuthorId())
-                            .postTitle(post.getPostTitle())
-                            .postCreatedDate(post.getPostCreatedDate())
-                            .build());
-        }
-
-        return postMainResponseList;
+        return postList.stream()
+                .map(PostMainResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -81,7 +68,7 @@ public class PostServiceImpl implements PostService {
         for (Comment comment : comments) {
             CommentResponse commentResponse = CommentResponse.builder()
                     .commentId(comment.getCommentId())
-                    .commentAuthorId(comment.getCommentAuthorId())
+                    .nickName(comment.getNickName())
                     .commentContent(comment.getCommentContent())
                     .commentCreatedDate(comment.getCommentCreatedDate())
                     .build();
@@ -92,9 +79,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostResponse createPost(String profileId, PostRequestForCreate request, MultipartFile file) {
+    public PostResponse createPost(LinkedHashMap<String, String> profile, PostRequestForCreate request, MultipartFile file) {
 
         log.info("글 작성하기!");
+
+        String profileId = profile.get("profileId");
+        String nickName = profile.get("nickName");
 
         String generatedId = generatePrimaryKey();
 
@@ -105,6 +95,7 @@ public class PostServiceImpl implements PostService {
                 .postAuthorId(profileId)
                 .postType(request.getPostTypeId())
                 .postTitle(request.getPostTitle())
+                .nickName(nickName)
                 .postContent(request.getPostContent())
                 .postCreatedDate(LocalDateTime.now())
                 .postModifiedDate(LocalDateTime.now())
@@ -120,9 +111,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void updatePost(String profileId, PostRequestForUpdate request, MultipartFile file) {
+    public void updatePost(LinkedHashMap<String, String> profile, PostRequestForUpdate request, MultipartFile file) {
 
         log.info("글 수정 하기!");
+
+        String profileId = profile.get("profileId");
+        String nickName = profile.get("nickName");
 
         Post postBf = postRepository.findByPostIdAndDeleteFlagPostFalse(request.getPostId())
                 .orElseThrow(() -> new CustomException(CustomErrorCode.POST_NOT_FOUND));
@@ -135,6 +129,7 @@ public class PostServiceImpl implements PostService {
                     .postAuthorId(profileId)
                     .postType(request.getPostTypeId())
                     .postTitle(request.getPostTitle())
+                    .nickName(nickName)
                     .postContent(request.getPostContent())
                     .postImageFile(imageUrl)
                     .postCreatedDate(postBf.getPostCreatedDate())
@@ -148,7 +143,10 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deletePost(String profileId, String postId) {
+    public void deletePost(LinkedHashMap<String, String> profile, String postId) {
+
+        String profileId = profile.get("profileId");
+        String nickName = profile.get("nickName");
 
         log.info("글 삭제하기!");
 

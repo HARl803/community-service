@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,9 +46,9 @@ public class PostController {
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CookieValue("JSESSIONID") String sessionId) throws URISyntaxException {
 
-        String profileId = authService.authorizedProfileId(sessionId);
+        LinkedHashMap<String, String> profile = authService.authorizedProfileId(sessionId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(postServiceImpl.createPost(profileId, request, file));
+        return ResponseEntity.status(HttpStatus.CREATED).body(postServiceImpl.createPost(profile, request, file));
     }
 
     @PatchMapping
@@ -56,19 +57,19 @@ public class PostController {
             @RequestPart(value = "file", required = false) MultipartFile file,
             @CookieValue("JSESSIONID") String sessionId) throws URISyntaxException {
 
-        String profileId = authService.authorizedProfileId(sessionId);
+        LinkedHashMap<String, String> profile = authService.authorizedProfileId(sessionId);
 
-            postServiceImpl.updatePost(profileId, request, file);
-            return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.NO_CONTENT);
+        postServiceImpl.updatePost(profile, request, file);
+        return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping
     public ResponseEntity<?> deletePost(@RequestBody String postId,
                                         @CookieValue("JSESSIONID") String sessionId) throws URISyntaxException {
 
-        String profileId = authService.authorizedProfileId(sessionId);
+        LinkedHashMap<String, String> profile = authService.authorizedProfileId(sessionId);
 
-        postServiceImpl.deletePost(profileId, postId);
+        postServiceImpl.deletePost(profile, postId);
         return (ResponseEntity<?>) ResponseEntity.status(HttpStatus.NO_CONTENT);
     }
 }

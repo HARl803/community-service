@@ -2,13 +2,12 @@ package com.haribo.community_service.comment.application.service;
 
 import com.haribo.community_service.comment.application.dto.Comment;
 import com.haribo.community_service.comment.domain.repository.CommentRepository;
-import com.haribo.community_service.post.domain.repository.PostRepository;
-import com.haribo.community_service.common.exception.CustomErrorCode;
-import com.haribo.community_service.common.exception.CustomException;
 import com.haribo.community_service.comment.presentation.request.CommentRequestForCreate;
 import com.haribo.community_service.comment.presentation.request.CommentRequestForUpdate;
-
 import com.haribo.community_service.comment.presentation.response.CommentResponse;
+import com.haribo.community_service.common.exception.CustomErrorCode;
+import com.haribo.community_service.common.exception.CustomException;
+import com.haribo.community_service.post.domain.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -34,9 +34,11 @@ public class CommentServiceImpl implements CommentService {
     private String pathToNoti;
 
     @Override
-    public List<CommentResponse> getCommentsByUserId(String profileId) {
+    public List<CommentResponse> getCommentsByUserId(LinkedHashMap<String, String> profile) {
 
-        log.info("유저별 작성한 게시글 조회하기!");
+        String profileId = profile.get("profileId");
+
+        log.info("유저별 작성한 게시글 조회하기! profileId: {}", profileId);
 
         return commentRepository.findByCommentAuthorIdAndDeleteFlagCommentFalse(profileId).stream()
                 .map(CommentResponse::fromEntity)
@@ -44,9 +46,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public CommentResponse createComment(String profileId, CommentRequestForCreate request) throws URISyntaxException {
+    public CommentResponse createComment(LinkedHashMap<String, String> profile, CommentRequestForCreate request) throws URISyntaxException {
 
-        log.info("코멘트 생성하기!");
+        String profileId = profile.get("profileId");
+        String nickName = profile.get("nickName");
+
+        log.info("코멘트 생성하기! profileId: {}", profileId);
 
         postRepository.findByPostIdAndDeleteFlagPostFalse(request.getPostId())
                 .orElseThrow(() -> new CustomException(CustomErrorCode.POST_NOT_FOUND));
@@ -57,6 +62,7 @@ public class CommentServiceImpl implements CommentService {
                 .commentId(generatedId)
                 .postId(request.getPostId())
                 .commentAuthorId(profileId)
+                .nickName(nickName)
                 .commentContent(request.getCommentContent())
                 .commentCreatedDate(LocalDateTime.now())
                 .commentModifiedDate(LocalDateTime.now())
@@ -89,9 +95,12 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void updateComment(String profileId, CommentRequestForUpdate request) {
+    public void updateComment(LinkedHashMap<String, String> profile, CommentRequestForUpdate request) {
 
-        log.info("코멘트 업데이트!");
+        String profileId = profile.get("profileId");
+        String nickName = profile.get("nickName");
+
+        log.info("코멘트 업데이트! profileId: {}", profileId);
 
         Comment commentBf = commentRepository.findByCommentIdAndDeleteFlagCommentFalse(request.getCommentId())
                 .orElseThrow(() -> new CustomException(CustomErrorCode.COMMENT_NOT_FOUND));
@@ -101,6 +110,7 @@ public class CommentServiceImpl implements CommentService {
                     .commentId(request.getCommentId())
                     .postId(commentBf.getPostId())
                     .commentAuthorId(profileId)
+                    .nickName(nickName)
                     .commentContent(request.getCommentContent())
                     .commentCreatedDate(commentBf.getCommentCreatedDate())
                     .commentModifiedDate(LocalDateTime.now())
@@ -112,9 +122,11 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void deleteComment(String profileId, String commentId) {
+    public void deleteComment(LinkedHashMap<String, String> profile, String commentId) {
 
-        log.info("코멘트 삭제!");
+        String profileId = profile.get("profileId");
+
+        log.info("코멘트 삭제! profileId: {}, commentId: {}", profileId, commentId);
 
         Comment comment = commentRepository.findByCommentIdAndDeleteFlagCommentFalse(commentId)
                 .orElseThrow(() -> new CustomException(CustomErrorCode.COMMENT_NOT_FOUND));

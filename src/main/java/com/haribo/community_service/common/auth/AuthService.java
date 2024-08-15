@@ -3,7 +3,10 @@ package com.haribo.community_service.common.auth;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -21,7 +24,7 @@ public class AuthService {
     @Value("${path.to.auth}")
     private String pathToAuth;
 
-    public String authorizedProfileId(String sessionId) throws URISyntaxException {
+    public LinkedHashMap<String, String> authorizedProfileId(String sessionId) throws URISyntaxException {
 
         log.info("profileId 알아보기!: session check!");
 
@@ -32,8 +35,12 @@ public class AuthService {
 
         LinkedHashMap<String, LinkedHashMap<String, String>> map =  (LinkedHashMap<String, LinkedHashMap<String, String>>) responseEntity.getBody();
 
-        log.info("profileId: {}", map.get("profileMember").get("profileId"));
+        log.info("profileId: {}, nickName: {}", map.get("profileMember").get("profileId"), map.get("profileMember").get("nickName"));
 
-        return map.get("profileMember").get("profileId");
+        LinkedHashMap<String, String> response = new LinkedHashMap<>();
+        response.put("profileId", map.get("profileMember").get("profileId"));
+        response.put("nickName", map.get("profileMember").get("nickName"));
+
+        return response;
     }
 }

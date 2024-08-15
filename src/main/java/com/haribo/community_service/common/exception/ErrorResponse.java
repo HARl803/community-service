@@ -1,6 +1,8 @@
 package com.haribo.community_service.common.exception;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder

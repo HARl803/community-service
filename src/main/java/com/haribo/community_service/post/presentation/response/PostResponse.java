@@ -1,8 +1,11 @@
 package com.haribo.community_service.post.presentation.response;
 
-import com.haribo.community_service.post.application.dto.Post;
 import com.haribo.community_service.comment.presentation.response.CommentResponse;
-import lombok.*;
+import com.haribo.community_service.post.application.dto.Post;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -13,13 +16,27 @@ import java.util.List;
 @AllArgsConstructor
 public class PostResponse implements Serializable {
 
+    @NotBlank
     private String postId;
-    private String postAuthorId;
+
+    @NotBlank
+    private String nickName;
+
+    @NotBlank
     private String postTypeId;
+
+    @NotBlank
     private String postTitle;
+
+    @NotBlank
     private String postContent;
+
     private String postImageFile;
+
+    @NotBlank
     private LocalDateTime postCreatedDate;
+
+    @NotBlank
     private LocalDateTime postModifiedDate;
 
     private List<CommentResponse> comments;
@@ -27,7 +44,7 @@ public class PostResponse implements Serializable {
     public static PostResponse fromEntity(Post post, List<CommentResponse> commentList) {
         return new PostResponse(
                 post.getPostId(),
-                post.getPostAuthorId(),
+                post.getNickName(),
                 post.getPostType(),
                 post.getPostTitle(),
                 post.getPostContent(),

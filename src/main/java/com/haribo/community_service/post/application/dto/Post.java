@@ -28,6 +28,10 @@ public class Post {
     private String postType;
 
     @NotBlank
+    @Column(name = "nick_name")
+    private String nickName;
+
+    @NotBlank
     private String postTitle;
 
     @NotBlank
